@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import OpenAI from "openai";
 
 const App = () => {
   const [inputText, setInputText] = useState("");
@@ -19,27 +20,36 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      // In a real implementation, you would call the OpenAI API here
-      // This is a placeholder for demonstration purposes
-      const translationMap = {
-        French: "Comment allez-vous?",
-        Spanish: "¿Cómo estás?",
-        Japanese: "お元気ですか？",
-      };
+      const openai = new OpenAI({
+        apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+        dangerouslyAllowBrowser: true, // Note: This is needed for client-side usage
+      });
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: `You are a translator. Translate the given text to ${selectedLanguage}. Only provide the translation, no explanations.`,
+          },
+          {
+            role: "user",
+            content: inputText,
+          },
+        ],
+        max_tokens: 100,
+      });
 
-      // Get translation based on selected language
-      setTranslatedText(translationMap[selectedLanguage] || inputText);
+      const translatedText = response.choices[0].message.content.trim();
+      setTranslatedText(translatedText);
       setIsTranslated(true);
     } catch (error) {
       console.error("Translation error:", error);
+      // Handle error appropriately
     } finally {
       setIsLoading(false);
     }
   };
-
   const resetTranslation = () => {
     setTranslatedText("");
     setIsTranslated(false);
@@ -65,8 +75,8 @@ const App = () => {
 
           {!isTranslated ? (
             <div className="p-4">
-              <h2 className="text-blue-800 font-semibold mb-2 flex items-center">
-                Text to translate <span className="ml-1">⚡</span>
+              <h2 className="text-blue-500 font-semibold mb-2 flex items-center">
+                Text to translate <span className="ml-1">👇</span>
               </h2>
 
               <textarea
@@ -74,10 +84,11 @@ const App = () => {
                 onChange={(e) => setInputText(e.target.value)}
                 className="w-full h-24 p-3 bg-gray-100 rounded-md mb-4 resize-none"
                 placeholder="Enter text to translate..."
+                required
               />
 
-              <h2 className="text-blue-800 font-semibold mb-2 flex items-center">
-                Select language <span className="ml-1">⚡</span>
+              <h2 className="text-blue-500 font-semibold mb-2 flex items-center">
+                Select language <span className="ml-1">👇</span>
               </h2>
 
               <div className="space-y-2 mb-4">
@@ -91,12 +102,12 @@ const App = () => {
                       className="mr-2"
                     />
                     <span className="flex items-center">
+                      <span className="mr-2">{lang.name}</span>
                       <img
                         src={lang.flag}
                         alt={`${lang.name} flag`}
-                        className="w-6 h-4 mr-2"
+                        className="w-6 h-4"
                       />
-                      {lang.name}
                     </span>
                   </label>
                 ))}
@@ -105,23 +116,23 @@ const App = () => {
               <button
                 onClick={translateText}
                 disabled={isLoading || !inputText}
-                className="w-full py-3 bg-blue-700 text-white font-semibold rounded-md hover:bg-blue-800 transition disabled:opacity-50"
+                className="w-full py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-800 transition disabled:opacity-50"
               >
                 {isLoading ? "Translating..." : "Translate"}
               </button>
             </div>
           ) : (
             <div className="p-4">
-              <h2 className="text-blue-800 font-semibold mb-2 flex items-center">
-                Original text <span className="ml-1">⚡</span>
+              <h2 className="text-blue-500 font-semibold mb-2 flex items-center">
+                Original text <span className="ml-1">👇</span>
               </h2>
 
               <div className="w-full h-24 p-3 bg-gray-100 rounded-md mb-4">
                 {inputText}
               </div>
 
-              <h2 className="text-blue-800 font-semibold mb-2 flex items-center">
-                Your translation <span className="ml-1">⚡</span>
+              <h2 className="text-blue-500 font-semibold mb-2 flex items-center">
+                The translation <span className="ml-1">👇</span>
               </h2>
 
               <div className="w-full h-24 p-3 bg-gray-100 rounded-md mb-4">
@@ -130,7 +141,7 @@ const App = () => {
 
               <button
                 onClick={resetTranslation}
-                className="w-full py-3 bg-blue-700 text-white font-semibold rounded-md hover:bg-blue-800 transition"
+                className="w-full py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-800 transition"
               >
                 Start Over
               </button>
