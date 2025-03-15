@@ -244,13 +244,6 @@ const App = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className=" text-center py-3">
-        <p className="text-blue-500 text-sm">
-          Developed by Adaobi Okwuosa as part of Scrimba solo project
-        </p>
-      </footer>
     </div>
   );
 };
